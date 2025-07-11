@@ -1,6 +1,7 @@
 # fetch_sources.py
 import feedparser
 from datetime import datetime
+from dateutil import parser as date_parser
 
 RSS_FEEDS = [
     "https://www.investing.com/rss/news_301.rss",
@@ -15,17 +16,19 @@ def fetch_all_news():
         try:
             feed = feedparser.parse(url)
             for entry in feed.entries:
+                published_raw = entry.get("published", "")
                 all_entries.append({
                     "title": entry.title,
-                    "published": entry.get("published", "")
+                    "published": published_raw
                 })
         except Exception as e:
-            print(f"خطا در خواندن {url}: {e}")
+            print(f"❌ خطا در خواندن {url}: {e}")
     return all_entries
 
 def is_today(published_str):
     try:
-        pub_dt = datetime(*feedparser._parse_date(published_str)[:6])
+        pub_dt = date_parser.parse(published_str)
         return pub_dt.date() == datetime.utcnow().date()
-    except:
+    except Exception as e:
+        print(f"[!] فرمت تاریخ نامشخص: {published_str} → {e}")
         return False
