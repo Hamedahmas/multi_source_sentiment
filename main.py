@@ -1,7 +1,9 @@
 from fetch_sources import fetch_all_news, is_today
 from sentiment import analyze_sentiment, extract_currency_impact, classify_currency_type
 from send_telegram import send_telegram
+from fetch_calendar import fetch_iranbourse_calendar, summarize_calendar
 from datetime import datetime
+
 
 def format_currency_output(impact_data):
     total = sum(impact_data.values())
@@ -15,6 +17,7 @@ def format_currency_output(impact_data):
         direction = "⏫" if any(k in pair.lower() for k in ["aud", "eur", "gbp", "nzd"]) else "⏬"
         lines.append(f"{pair} {direction} {type_} {percent}%")
     return "\n".join(lines)
+
 
 def generate_report(entries, label):
     count = len(entries)
@@ -34,6 +37,8 @@ def generate_report(entries, label):
         impact_lines.append(f"{pair} {sentiment_icon} {trend_type} {percentage}%")
 
     impact_result = "\n".join(impact_lines) if impact_lines else "اطلاعاتی موجود نیست"
+    calendar_events = fetch_iranbourse_calendar()
+    calendar_summary = summarize_calendar(calendar_events)
 
     message = f"""
 📌 {label}
@@ -44,9 +49,11 @@ def generate_report(entries, label):
 📈 نوع جفت‌ارزهای تحت تأثیر: {currency_type}
 📉 جفت‌ارزهای تحت‌تأثیر و نوع سنتیمنت و درصد تأثیر:
 {impact_result}
+{calendar_summary}
 📡 تحلیل با الگوریتم ساده سنتیمنت
 """
     return message.strip()
+
 
 def main():
     entries = fetch_all_news()
@@ -80,6 +87,7 @@ def main():
         send_telegram(today_msg)
     else:
         send_telegram("❗️هیچ خبری برای امروز یافت نشد.")
+
 
 if __name__ == "__main__":
     main()
